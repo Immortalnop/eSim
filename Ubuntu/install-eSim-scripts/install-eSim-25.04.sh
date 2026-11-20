@@ -249,6 +249,13 @@ function copyKicadLibrary
 
     # Copy symbol table for eSim custom symbols 
     cp kicadLibrary/template/sym-lib-table ~/.config/kicad/6.0/
+
+    # KiCad 8 reads its settings from ~/.config/kicad/8.0, not 6.0, so
+    # copy the table there too. Any existing KiCad 8 table is kept as a
+    # numbered backup (sym-lib-table.~1~), since it may hold the user's
+    # own libraries.
+    mkdir -p ~/.config/kicad/8.0
+    cp --backup=numbered kicadLibrary/template/sym-lib-table ~/.config/kicad/8.0/
     echo "symbol table copied in the directory"
 
     # Copy KiCad symbols made for eSim
