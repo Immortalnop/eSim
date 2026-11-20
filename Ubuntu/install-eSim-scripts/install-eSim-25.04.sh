@@ -141,7 +141,8 @@ function installKicad
                 fi
             else
                 echo "KiCad 8.0 is already installed."
-                exit 0
+                # return (not exit) so the rest of the installer still runs
+                return 0
             fi
         fi
 
