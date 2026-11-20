@@ -1,4 +1,4 @@
-  GNU nano 8.3                                                                                                                                                                                                                                                                                                                                                                                                                                                   install-eSim.sh
+                                                                                                                                                                                                                                                                                                                                                                                                                                                install-eSim.sh
 #!/bin/bash
 #=============================================================================
 #          FILE: install-eSim.sh
