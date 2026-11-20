@@ -25,6 +25,8 @@ config_dir="$HOME/.esim"
 config_file="config.ini"
 eSim_Home=`pwd`
 ngspiceFlag=0
+# Ubuntu 25.04 support files for NGHDL, kept next to this script
+nghdl_patch_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/nghdl-25.04"
 
 ## All Functions goes here
 
@@ -64,6 +66,12 @@ function installNghdl
 
     echo "Installing NGHDL..........................."
     unzip -o nghdl.zip
+
+    # nghdl.zip from eSim 2.5 only supports Ubuntu 22.04 to 24.04.
+    # Add the 25.04 launcher and install script before running it.
+    cp "$nghdl_patch_dir/install-nghdl.sh" nghdl/
+    cp "$nghdl_patch_dir/install-nghdl-25.04.sh" nghdl/install-nghdl-scripts/
+
     cd nghdl/
     chmod +x install-nghdl.sh
 
