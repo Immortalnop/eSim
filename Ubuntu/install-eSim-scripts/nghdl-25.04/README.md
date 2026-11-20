@@ -14,6 +14,7 @@ folder. `installNghdl` in `../install-eSim-25.04.sh` copies these files into
 | --- | --- | --- |
 | `install-nghdl.sh` | `nghdl/install-nghdl.sh` | the launcher in `nghdl.zip` |
 | `install-nghdl-25.04.sh` | `nghdl/install-nghdl-scripts/` | `install-nghdl-24.04.sh` in `nghdl.zip` |
+| `model_generation.py` | `nghdl/src/model_generation.py` | the same file in `nghdl.zip` |
 
 ## Changes
 
@@ -43,6 +44,22 @@ comment):
 - **`libfl-dev` added.** Verilator needs `FlexLexer.h`. `flex` only
   recommends `libfl-dev`, so the build fails wherever recommended packages
   are turned off.
+
+`model_generation.py` (NGHDL's model generator, used from the `nghdl` GUI):
+
+- Two regular expressions were ordinary strings containing `\(` and `\)`.
+  Python 3.12 and later, including 25.04's Python 3.13, report
+  `SyntaxWarning: invalid escape sequence '\('`, and a future Python
+  version will reject them. They are now raw strings. The upstream code had
+  silenced the linter with `# noqa`, which is removed. Behaviour does not
+  change: `"\("` and `r"\("` are the same two characters.
+
+  ```diff
+  -                item = re.sub("\(", " ", item, flags=re.I)      # noqa
+  -                item = re.sub("\)", " ", item, flags=re.I)      # noqa
+  +                item = re.sub(r"\(", " ", item, flags=re.I)
+  +                item = re.sub(r"\)", " ", item, flags=re.I)
+  ```
 
 ## Tested
 

@@ -71,6 +71,9 @@ function installNghdl
     # Add the 25.04 launcher and install script before running it.
     cp "$nghdl_patch_dir/install-nghdl.sh" nghdl/
     cp "$nghdl_patch_dir/install-nghdl-25.04.sh" nghdl/install-nghdl-scripts/
+    # Same file with two regex strings made raw (r"\(", r"\)") to fix
+    # Python 3.12+ "invalid escape sequence" warnings
+    cp "$nghdl_patch_dir/model_generation.py" nghdl/src/
 
     cd nghdl/
     chmod +x install-nghdl.sh
