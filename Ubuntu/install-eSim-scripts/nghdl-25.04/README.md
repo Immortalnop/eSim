@@ -63,8 +63,15 @@ comment):
 
 ## Tested
 
-On Ubuntu 25.04 (GCC 14.2, GNAT 14.2, LLVM 18.1.8), using the sources from
-`nghdl.zip`:
+**Full install.** On Ubuntu 25.04 under WSL2, the eSim installer with these
+files completed on 20 November 2026 (`eSim Installed Successfully`). GHDL
+4.1.0 (`llvm 18.1.8 code generator`), Verilator 4.210, NGHDL's ngspice and
+the `nghdl` command were installed. The `model_generation.py` fix was added
+after that run and was tested on its own. Details and logs are in
+[`../../REPORT-25.04-aarush.md`](../../REPORT-25.04-aarush.md).
+
+**Build checks before the full install.** On Ubuntu 25.04 (GCC 14.2,
+GNAT 14.2, LLVM 18.1.8), using the sources from `nghdl.zip`:
 
 - GHDL 4.1.0 builds against LLVM 18 and reports
   `llvm 18.1.8 code generator`; a testbench for

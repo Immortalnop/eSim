@@ -12,6 +12,6 @@ It contains all the documentation for packaging eSim for distribution.
 
 > Note: These changes have to be made `first` before proceeding with the packaging on either platform.
 
-3. Refer the [documentation](Ubuntu/README.md) to package eSim for Ubuntu OS.
+3. Refer the [documentation](Ubuntu/README.md) to package eSim for Ubuntu OS. For Ubuntu 25.04, see the [Ubuntu 25.04 report](Ubuntu/REPORT-25.04-aarush.md).
 
 4. Refer the [documentation](Windows/README.md) to package eSim for Windows OS.
