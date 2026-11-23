@@ -3,7 +3,7 @@
 **Author:** Aarush Mohan Mathur
 **Task:** eSim Semester Long Internship, Autumn 2026, Screening Task 4 (eSim Upgradation)
 **Branch:** [`installers`](https://github.com/Immortalnop/eSim/tree/installers) of the fork [Immortalnop/eSim](https://github.com/Immortalnop/eSim) (work done on `ubuntu25-fixes`)
-**Tested on:** 20 November 2026
+**Tested on:** 20 November 2026 (finding and fixing), 23 November 2026 (clean install with all fixes)
 
 ## Summary
 
@@ -11,7 +11,9 @@ The eSim 2.5 release does not install on Ubuntu 25.04, and the newer scripts
 in the `installers` branch did not install it either. This report lists
 **12 issues** found while installing eSim 2.5 on Ubuntu 25.04. **9 are fixed**
 in this fork, 1 had already been fixed upstream, and 2 are reported but not
-fixed. With the fixes, the installer completes and eSim starts.
+fixed. With the fixes, the installer completes and eSim starts. A clean
+install from scratch with all fixes, using the published branch, completed
+unattended on 23 November 2026.
 
 | # | Issue | Severity | Status | Commit |
 | --- | --- | --- | --- | --- |
@@ -100,6 +102,15 @@ this clean state (`wsl --export`) made it possible to go back to it.
    command-line electrical rules check, reports a symbol library that is
    missing from the configuration. It was used with `KICAD_CONFIG_HOME`
    pointing at a test folder to compare configurations.
+7. **Final clean install.** A separate WSL distribution was created from the
+   clean snapshot (no eSim, KiCad or `python3-virtualenv`). The installer
+   files were taken from the published branch with
+   `git archive origin/ubuntu25-fixes Ubuntu/install-eSim.sh Ubuntu/install-eSim-scripts`,
+   copied over a fresh unzip of `eSim-2.5.zip`, and run with `n` piped in as
+   the answer to the proxy question and no other input. Any other prompt
+   would have received end-of-input and failed the run. In that test copy
+   only, `sudo` was set not to ask for a password so the run could be
+   unattended.
 
 ## Test runs
 
@@ -110,9 +121,12 @@ this clean state (`wsl --export`) made it possible to go back to it.
 | C | 13:38 | Branch + fixes 1, 2 | Installs dependencies, Python packages and KiCad, then stops in NGHDL (issue 4a); prompt seen (issue 5) | [`3-after-syntax-fix-nghdl-fails.log`](report-25.04-aarush/logs/3-after-syntax-fix-nghdl-fails.log) |
 | D | 16:24 | + NGHDL fix (4a–4c) | Stops after the KiCad step with exit code 0 (issue 7) | [`4-rerun-stops-after-kicad.log`](report-25.04-aarush/logs/4-rerun-stops-after-kicad.log) |
 | E | 16:40 | + KiCad fix (7) | **Completes:** `eSim Installed Successfully`, exit code 0 | [`5-install-success.log`](report-25.04-aarush/logs/5-install-success.log) |
+| F | 23 Nov, 15:49–16:22 | Clean install, all fixes (published branch) | Runs unattended until KiCad, then stops: Launchpad's PPA server returned `503 Service Unavailable` for one KiCad package (a server outage, not an eSim issue) | [`6-clean-install-launchpad-503.log`](report-25.04-aarush/logs/6-clean-install-launchpad-503.log) |
+| G | 23 Nov, 16:22–16:47 | Same system, installer run again | **Completes:** `eSim Installed Successfully`, exit code 0, no prompts | [`7-clean-install-retry-success.log`](report-25.04-aarush/logs/7-clean-install-retry-success.log) |
 
-Fixes 5, 6 and 8 were made after Run E and were checked separately; see
-[What has not been tested yet](#what-has-not-been-tested-yet).
+Fixes 5, 6 and 8 were made after Run E. They were first checked on their
+own (see each issue), then confirmed together in the clean install (Runs F
+and G).
 
 ## Issues and fixes
 
@@ -393,9 +407,10 @@ install, remove and purge in the eSim and NGHDL 25.04 scripts already has
 ```
 
 **Verification.** This was the only `apt` command in the script without
-`-y`. The prompt only appears when the package is not yet installed, so it
-did not appear again in Runs D and E. A clean install confirms it (see
-[What has not been tested yet](#what-has-not-been-tested-yet)).
+`-y`. The prompt only appears when the package is not yet installed, so the
+clean install (Run F) is the real test. There, `python3-virtualenv` was
+installed with no input (log lines 13–513, virtual environment created at
+line 513), and neither clean-run log contains a `[Y/n]` prompt.
 
 ### Issue 6: KiCad 8 does not see the eSim symbol libraries (High, fixed)
 
@@ -442,6 +457,10 @@ it is kept as a numbered backup instead of being overwritten.
 folder and `sudo` stubbed out. The table was written to both `6.0` and
 `8.0`, and `kicad-cli sch erc` then loaded `eSim_Analog` from it. Running it
 a second time kept the earlier table as `sym-lib-table.~1~`.
+
+In the clean install (Run G), the installer created
+`~/.config/kicad/8.0/sym-lib-table` listing all 15 eSim libraries, and
+`kicad-cli sch erc` using that real configuration loaded `eSim_Analog`.
 
 ### Issue 7: installer exits early when KiCad 8 is already installed (High, fixed)
 
@@ -521,6 +540,9 @@ Behaviour does not change: `"\("` and `r"\("` are the same two characters.
   lines.
 - The module imports with the system Python used by the `nghdl` command.
 - `installNghdl`, run in a test folder, puts the fixed file in place.
+- In the clean install (Run G), the installed
+  `~/eSim-2.5/nghdl/src/model_generation.py` is the fixed copy and compiles
+  with warnings treated as errors.
 
 All Python files in eSim's `src/` and NGHDL's `src/` were compiled with
 Python 3.13, and these two lines are the only escape-sequence warnings.
@@ -569,6 +591,16 @@ desktop.
 - `rm: cannot remove '/usr/bin/ngspice': No such file or directory` (Run E
   log line 24313) is expected on a first install, and the NGHDL script
   ignores it on purpose.
+- KiCad is installed from two sources at once. `kicad` is pinned to
+  `8.0.8+dfsg-1`, which comes from Ubuntu's `universe` repository, but
+  `kicad-libraries`, `kicad-symbols` and `kicad-templates` are not pinned,
+  so they come from the KiCad PPA as `8.0.9~ubuntu25.04.1` (Run F log lines
+  1902–1911). This worked in every run but mixes two KiCad releases.
+- Because those packages come from the KiCad PPA, the install depends on
+  Launchpad being available. In Run F, Launchpad returned
+  `503 Service Unavailable` (log lines 1911–1915). The installer stopped
+  with `Error! Kindly resolve above error(s) and try again.`, which is the
+  correct behaviour, and running it again (Run G) worked.
 
 ## Suspected issues that turned out not to be problems
 
@@ -600,13 +632,27 @@ starts ([screenshot](report-25.04-aarush/images/03-esim-running.png)).
 | eSim Python code | the main `Application` module and the `kicadtoNgspice`, `maker`, `projManagement` and `ngspicetoModelica` packages import cleanly with Python 3.13.3, matplotlib 3.11.2 and PyQt5 5.15.11 (offscreen, no window). Command-line converter scripts that read their arguments on start-up were not import-tested. |
 | Simulation backend | eSim's `Examples/RC/RC.cir.out`, run with the installed ngspice, gives `v(out)` = 4.966 V at 50 ms, as expected for R = 1 kΩ, C = 10 µF with a 5 V step |
 
+### Clean install with all fixes (23 November 2026)
+
+The final check installed eSim from scratch on a fresh copy of the clean
+Ubuntu 25.04 snapshot, using the installer files from the published branch
+(see [Method](#method), step 7). The first attempt (Run F) stopped when
+Launchpad's server was unavailable. Running the installer again on the same
+system (Run G) completed
+([log](report-25.04-aarush/logs/7-clean-install-retry-success.log)).
+
+| Check (clean install) | Result |
+| --- | --- |
+| Installer | `eSim Installed Successfully`, exit code 0 (Run G log lines 24540, 24544); no input other than the proxy answer, and no `[Y/n]` prompt in either log (issue 5) |
+| NGHDL | `Detected Ubuntu Version: 25.04` and hand-off to `install-nghdl-25.04.sh` (lines 392–393); `Debugging is enabled with llvm 18.1.8` (line 14937); GHDL, Verilator and NGHDL installed (lines 16269, 20849, 24528) |
+| Installed tools | GHDL 4.1.0 with GNAT 14.2.0 and llvm 18.1.8 code generator; Verilator 4.210; `ngspice` points to NGHDL's ngspice-35; `nghdl` and `esim` installed |
+| KiCad 8 symbol table (issue 6) | `~/.config/kicad/8.0/sym-lib-table` created with all 15 eSim libraries; `kicad-cli sch erc` loads `eSim_Analog` from it |
+| `model_generation.py` (issue 8) | Installed copy is the fixed file and compiles with warnings treated as errors |
+| GHDL simulation | Half-adder testbench gives the correct truth table |
+| eSim RC example | `v(out)` = 4.966 V at 50 ms |
+
 ## What has not been tested yet
 
-- **A clean, from-scratch install with all eight fix commits.** Run E
-  included fixes 1, 2, 4 and 7. Fixes 5, 6 and 8 came later and were checked
-  on their own (see each issue). A final run from the clean snapshot with
-  the current branch confirms all of them together. In particular, it
-  should show no `[Y/n]` prompt (issue 5).
 - **KiCad 8's first-start dialog.** On first launch, KiCad 8 may offer to
   import settings from version 6.0. The fix for issue 6 works with the
   `kicad-cli` checker, but the dialog itself has not been checked in the
@@ -667,6 +713,7 @@ On top of `a77d6b9` (head of `installers` before this work):
 | [`85bdc47`](https://github.com/Immortalnop/eSim/commit/85bdc474658d1a07cd9f216c78e42ed1f5f48438) | Install `python3-virtualenv` with `-y` (issue 5) |
 | [`3fb715f`](https://github.com/Immortalnop/eSim/commit/3fb715fe5922ec0b263c8ce908f14c811a3a3d30) | Copy eSim's symbol table to the KiCad 8 config folder (issue 6) |
 | [`6306b3f`](https://github.com/Immortalnop/eSim/commit/6306b3f78d6646f74ca01600bb1082b35b4c9752) | Fix invalid escape sequences in NGHDL `model_generation.py` (issue 8) |
+| [`cd6eda6`](https://github.com/Immortalnop/eSim/commit/cd6eda6f) | Add this report, logs and screenshots, and update the READMEs |
 
 ## Evidence
 
@@ -683,6 +730,8 @@ plain text. Every line is kept, so line numbers in this report match.
 | [`3-after-syntax-fix-nghdl-fails.log`](report-25.04-aarush/logs/3-after-syntax-fix-nghdl-fails.log) | C: after fixes 1 and 2, fails in NGHDL |
 | [`4-rerun-stops-after-kicad.log`](report-25.04-aarush/logs/4-rerun-stops-after-kicad.log) | D: stops after the KiCad step |
 | [`5-install-success.log`](report-25.04-aarush/logs/5-install-success.log) | E: complete install |
+| [`6-clean-install-launchpad-503.log`](report-25.04-aarush/logs/6-clean-install-launchpad-503.log) | F: clean install with all fixes, stopped by a Launchpad server outage |
+| [`7-clean-install-retry-success.log`](report-25.04-aarush/logs/7-clean-install-retry-success.log) | G: clean install, run again, complete |
 
 **Screenshots** (`images/`):
 

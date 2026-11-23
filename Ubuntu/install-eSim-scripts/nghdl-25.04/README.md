@@ -66,8 +66,9 @@ comment):
 **Full install.** On Ubuntu 25.04 under WSL2, the eSim installer with these
 files completed on 20 November 2026 (`eSim Installed Successfully`). GHDL
 4.1.0 (`llvm 18.1.8 code generator`), Verilator 4.210, NGHDL's ngspice and
-the `nghdl` command were installed. The `model_generation.py` fix was added
-after that run and was tested on its own. Details and logs are in
+the `nghdl` command were installed. On 23 November 2026, a clean install
+from scratch with all fixes, including the `model_generation.py` fix,
+completed as well. Details and logs are in
 [`../../REPORT-25.04-aarush.md`](../../REPORT-25.04-aarush.md).
 
 **Build checks before the full install.** On Ubuntu 25.04 (GCC 14.2,
